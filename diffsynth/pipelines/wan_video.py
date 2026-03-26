@@ -62,6 +62,7 @@ class WanVideoPipeline(BasePipeline):
             WanVideoUnit_ImageEmbedderCLIP(),
             WanVideoUnit_ImageEmbedderFused(),
             WanVideoUnit_FunControl(),
+            WanVideoUnit_MultiControl(),
             WanVideoUnit_FunReference(),
             WanVideoUnit_FunCameraControl(),
             WanVideoUnit_SpeedControl(),
@@ -555,6 +556,55 @@ class WanVideoUnit_FunControl(PipelineUnit):
         y = torch.concat([control_latents, y], dim=1)
         return {"clip_feature": clip_feature, "y": y}
     
+
+
+class WanVideoUnit_MultiControl(PipelineUnit):
+    def __init__(self):
+        super().__init__(
+            input_params=("control_video_sparse_depth", "control_video_sparse_color", "control_video_bbox",
+                          "num_frames", "height", "width", "tiled", "tile_size", "tile_stride",
+                          "clip_feature", "y", "latents"),
+            output_params=("clip_feature", "y"),
+            onload_model_names=("vae",)
+        )
+
+    def _encode_control(self, pipe, control_video, tiled, tile_size, tile_stride):
+        control_video = pipe.preprocess_video(control_video)
+        control_latents = pipe.vae.encode(
+            control_video, device=pipe.device, tiled=tiled, tile_size=tile_size, tile_stride=tile_stride
+        )
+        return control_latents.to(dtype=pipe.torch_dtype, device=pipe.device)
+
+    def process(self, pipe: WanVideoPipeline,
+                control_video_sparse_depth, control_video_sparse_color, control_video_bbox,
+                num_frames, height, width, tiled, tile_size, tile_stride,
+                clip_feature, y, latents):
+        controls = [control_video_sparse_depth, control_video_sparse_color, control_video_bbox]
+        if all(c is None for c in controls):
+            return {}
+        pipe.load_models_to_device(self.onload_model_names)
+
+        control_latents_list = []
+        for control_video in controls:
+            if control_video is not None:
+                control_latents_list.append(self._encode_control(pipe, control_video, tiled, tile_size, tile_stride))
+            else:
+                # Fill with zeros for missing control
+                control_latents_list.append(
+                    torch.zeros((1, 16, (num_frames - 1) // 4 + 1, height // 8, width // 8),
+                                dtype=pipe.torch_dtype, device=pipe.device)
+                )
+        all_control_latents = torch.concat(control_latents_list, dim=1)
+
+        y_dim = pipe.dit.in_dim - all_control_latents.shape[1] - latents.shape[1]
+        if clip_feature is None or y is None:
+            clip_feature = torch.zeros((1, 257, 1280), dtype=pipe.torch_dtype, device=pipe.device)
+            y = torch.zeros((1, y_dim, (num_frames - 1) // 4 + 1, height // 8, width // 8),
+                            dtype=pipe.torch_dtype, device=pipe.device)
+        else:
+            y = y[:, -y_dim:]
+        y = torch.concat([all_control_latents, y], dim=1)
+        return {"clip_feature": clip_feature, "y": y}
 
 
 class WanVideoUnit_FunReference(PipelineUnit):
