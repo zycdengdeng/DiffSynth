@@ -27,22 +27,7 @@ CAMERAS = [
 def load_caption(caption_path):
     with open(caption_path, "r") as f:
         data = json.load(f)
-    # Adapt this based on your actual JSON structure
-    if isinstance(data, str):
-        return data
-    elif isinstance(data, dict):
-        return data.get("caption", data.get("text", data.get("description", str(data))))
-    elif isinstance(data, list):
-        return data[0] if data else ""
-    return str(data)
-
-
-def find_control_input_dir(base_dir):
-    """Find the control_input_* subdirectory."""
-    for name in os.listdir(base_dir):
-        if name.startswith("control_input"):
-            return name
-    return None
+    return data["caption"]
 
 
 def main():
@@ -54,14 +39,9 @@ def main():
 
     root = Path(args.data_root)
 
-    # Detect control input directory names
-    blur_control_dir = find_control_input_dir(root / "BlurProjection")
-    depth_control_dir = find_control_input_dir(root / "DepthSparse")
-    bbox_control_dir = find_control_input_dir(root / "HDMapBbox")
-
-    print(f"BlurProjection control dir: {blur_control_dir}")
-    print(f"DepthSparse control dir:    {depth_control_dir}")
-    print(f"HDMapBbox control dir:      {bbox_control_dir}")
+    blur_control_dir = "control_input_blur"
+    depth_control_dir = "control_input_depth"
+    bbox_control_dir = "control_input_hdmap_bbox"
 
     rows = []
     missing = []
