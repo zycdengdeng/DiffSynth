@@ -33,7 +33,7 @@ def load_caption(caption_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_root", type=str, required=True,
-                        help="Root path, e.g. /mnt/zihanw/proj_utils_pro/transfer_video_maker/output_full_data")
+                        help="Root path, e.g. /mnt/zihanw/tf2.5_version1_full_Data")
     parser.add_argument("--output_csv", type=str, default="metadata.csv")
     args = parser.parse_args()
 
