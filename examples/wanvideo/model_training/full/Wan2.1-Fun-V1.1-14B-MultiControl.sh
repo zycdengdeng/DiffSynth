@@ -18,7 +18,8 @@ accelerate launch --config_file examples/wanvideo/model_training/full/accelerate
   --height 480 \
   --width 832 \
   --dataset_repeat 100 \
-  --model_id_with_origin_paths "models/Wan2.1-Fun-V1.1-14B-MultiControl:diffusion_pytorch_model*.safetensors,PAI/Wan2.1-Fun-V1.1-14B-Control:models_t5_umt5-xxl-enc-bf16.pth,PAI/Wan2.1-Fun-V1.1-14B-Control:Wan2.1_VAE.pth,PAI/Wan2.1-Fun-V1.1-14B-Control:models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth" \
+  --model_paths '["models/Wan2.1-Fun-V1.1-14B-MultiControl/diffusion_pytorch_model.safetensors"]' \
+  --model_id_with_origin_paths "PAI/Wan2.1-Fun-V1.1-14B-Control:models_t5_umt5-xxl-enc-bf16.pth,PAI/Wan2.1-Fun-V1.1-14B-Control:Wan2.1_VAE.pth,PAI/Wan2.1-Fun-V1.1-14B-Control:models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth" \
   --learning_rate 1e-5 \
   --num_epochs 2 \
   --remove_prefix_in_ckpt "pipe.dit." \
