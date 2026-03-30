@@ -208,7 +208,7 @@ wan_series = [
     {
         # Multi-Control variant: in_dim=80 = noise(16) + sparse_depth(16) + sparse_color(16) + bbox(16) + y(16)
         # Initialized from PAI/Wan2.1-Fun-V1.1-14B-Control with expanded patch_embedding
-        "model_hash": None,
+        "model_hash": "28bf88e0ba1caa37e6a0e041257cd0da",
         "model_name": "wan_video_dit",
         "model_class": "diffsynth.models.wan_video_dit.WanModel",
         "extra_kwargs": {'has_image_input': True, 'patch_size': [1, 2, 2], 'in_dim': 80, 'dim': 5120, 'ffn_dim': 13824, 'freq_dim': 256, 'text_dim': 4096, 'out_dim': 16, 'num_heads': 40, 'num_layers': 40, 'eps': 1e-06, 'has_ref_conv': True}
