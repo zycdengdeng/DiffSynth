@@ -23,13 +23,23 @@ def launch_training_task(
         num_workers = args.dataset_num_workers
         save_steps = args.save_steps
         num_epochs = args.num_epochs
-    
+
     optimizer = torch.optim.AdamW(model.trainable_modules(), lr=learning_rate, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.ConstantLR(optimizer)
     dataloader = torch.utils.data.DataLoader(dataset, shuffle=True, collate_fn=lambda x: x[0], num_workers=num_workers)
     model.to(device=accelerator.device)
     model, optimizer, dataloader, scheduler = accelerator.prepare(model, optimizer, dataloader, scheduler)
     initialize_deepspeed_gradient_checkpointing(accelerator)
+
+    # TensorBoard logging
+    tb_writer = None
+    if accelerator.is_main_process:
+        from torch.utils.tensorboard import SummaryWriter
+        tb_log_dir = os.path.join(model_logger.output_path, "tb_logs")
+        tb_writer = SummaryWriter(log_dir=tb_log_dir)
+        print(f"TensorBoard logs: {tb_log_dir}")
+
+    global_step = 0
     for epoch_id in range(num_epochs):
         for data in tqdm(dataloader):
             with accelerator.accumulate(model):
@@ -42,9 +52,19 @@ def launch_training_task(
                 optimizer.step()
                 model_logger.on_step_end(accelerator, model, save_steps, loss=loss)
                 scheduler.step()
+                global_step += 1
+
+                if tb_writer is not None:
+                    tb_writer.add_scalar("train/loss", loss.item(), global_step)
+                    tb_writer.add_scalar("train/lr", scheduler.get_last_lr()[0], global_step)
+                    tb_writer.add_scalar("train/epoch", epoch_id, global_step)
+
         if save_steps is None:
             model_logger.on_epoch_end(accelerator, model, epoch_id)
     model_logger.on_training_end(accelerator, model, save_steps)
+
+    if tb_writer is not None:
+        tb_writer.close()
 
 
 def launch_data_process_task(
