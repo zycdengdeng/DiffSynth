@@ -44,6 +44,11 @@ class WanTrainingModule(DiffusionTrainingModule):
             preset_lora_path, preset_lora_model,
             task=task,
         )
+
+        # When using LoRA, also unfreeze patch_embedding so that
+        # newly initialized control channels can be trained.
+        if lora_base_model == "dit" and hasattr(self.pipe.dit, "patch_embedding"):
+            self.pipe.dit.patch_embedding.requires_grad_(True)
         
         # Store other configs
         self.use_gradient_checkpointing = use_gradient_checkpointing
