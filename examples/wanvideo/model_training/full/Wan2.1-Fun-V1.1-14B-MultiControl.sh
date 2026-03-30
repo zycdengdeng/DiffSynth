@@ -25,4 +25,5 @@ accelerate launch --config_file examples/wanvideo/model_training/full/accelerate
   --remove_prefix_in_ckpt "pipe.dit." \
   --output_path "./models/train/Wan2.1-Fun-V1.1-14B-MultiControl_full" \
   --trainable_models "dit" \
-  --extra_inputs "control_video_sparse_depth,control_video_sparse_color,control_video_bbox"
+  --extra_inputs "control_video_sparse_depth,control_video_sparse_color,control_video_bbox" \
+  --initialize_model_on_cpu
