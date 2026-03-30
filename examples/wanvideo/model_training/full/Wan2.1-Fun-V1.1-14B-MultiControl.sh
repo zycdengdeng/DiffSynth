@@ -10,7 +10,7 @@
 # Step 3: Train with three control inputs
 DATA_ROOT=/mnt/zihanw/tf2.5_version1_full_Data
 
-accelerate launch --config_file examples/wanvideo/model_training/full/accelerate_config_14B.yaml examples/wanvideo/model_training/train.py \
+CUDA_VISIBLE_DEVICES=4,5,6,7 accelerate launch --config_file examples/wanvideo/model_training/full/accelerate_config_14B_4gpu.yaml examples/wanvideo/model_training/train.py \
   --dataset_base_path ${DATA_ROOT} \
   --dataset_metadata_path ${DATA_ROOT}/metadata.csv \
   --data_file_keys "video,control_video_sparse_depth,control_video_sparse_color,control_video_bbox" \
